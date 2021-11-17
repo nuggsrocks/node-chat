@@ -21,6 +21,14 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
+passport.serializeUser((user, done) => {
+  done(null, user._id)
+})
+
+passport.deserializeUser((id, done) => {
+  done(null, null)
+})
+
 app.use('/public', express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
