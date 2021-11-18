@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "standard": "standard --fix"
   },
   "dependencies": {
     "dotenv": "^10.0.0",
@@ -31,7 +32,8 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.15",
+    "standard": "^16.0.4"
   },
   "engines": {
     "node": "^14.18.1",

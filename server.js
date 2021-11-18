@@ -1,21 +1,22 @@
-'use strict';
-require('dotenv').config();
-const express = require('express');
-const myDB = require('./connection');
-const fccTesting = require('./freeCodeCamp/fcctesting.js');
+'use strict'
+require('dotenv').config()
+const path = require('path')
+const express = require('express')
+const myDB = require('./connection')
+const fccTesting = require('./freeCodeCamp/fcctesting.js')
 const session = require('express-session')
 const passport = require('passport')
 const { ObjectId } = require('mongodb')
 const LocalStrategy = require('passport-local')
 
-const app = express();
+const app = express()
 
-fccTesting(app); //For FCC testing purposes
+fccTesting(app) // For FCC testing purposes
 app.set('view engine', 'pug')
 
-app.use('/public', express.static(__dirname + '/public'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use('/public', express.static(path.join(__dirname, 'public')))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -31,13 +32,13 @@ myDB(async (client) => {
   const database = await client.db('database').collection('users')
 
   app.route('/').get((req, res) => {
-    res.render(__dirname + '/views/pug/index', {
+    res.render(path.join(__dirname, '/views/pug/index'), {
       title: 'Connected to database',
       message: 'Please Login',
       showLogin: true,
       showRegistration: true
-    });
-  });
+    })
+  })
 
   app.route('/login').post(passport.authenticate('local', { failureRedirect: '/' }), (req, res) => {
     res.redirect('/profile')
@@ -51,7 +52,7 @@ myDB(async (client) => {
   }
 
   app.route('/profile').get(ensureAuthenticated, (req, res) => {
-    res.render(__dirname + '/views/pug/profile', {
+    res.render(path.join(__dirname, '/views/pug/profile'), {
       username: req.user.username
     })
   })
@@ -62,7 +63,7 @@ myDB(async (client) => {
   })
 
   app.route('/register').post((req, res, next) => {
-    database.findOne({username: req.body.username}, (err, user) => {
+    database.findOne({ username: req.body.username }, (err, user) => {
       if (err) {
         next(err)
       } else if (user) {
@@ -91,13 +92,16 @@ myDB(async (client) => {
   })
 
   passport.deserializeUser((id, done) => {
-    database.findOne({_id: new ObjectId(id)}, (err, doc) => {
+    database.findOne({ _id: new ObjectId(id) }, (err, doc) => {
+      if (err) {
+        return done(null, false)
+      }
       done(null, doc)
     })
   })
 
   passport.use(new LocalStrategy((username, password, done) => {
-    database.findOne({username}, (err, user) => {
+    database.findOne({ username }, (err, user) => {
       console.log(`User "${username}" attempted to login.`)
       if (err) {
         return done(err)
@@ -110,14 +114,14 @@ myDB(async (client) => {
   }))
 }).catch((err) => {
   app.route('/').get((req, res) => {
-    res.render(__dirname + '/views/pug/index', {
+    res.render(path.join(__dirname, '/views/pug/index'), {
       title: err,
       message: 'Unable to login!'
     })
   })
 })
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
-  console.log('Listening on port ' + PORT);
-});
+  console.log('Listening on port ' + PORT)
+})
