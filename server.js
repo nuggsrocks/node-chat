@@ -34,7 +34,8 @@ myDB(async (client) => {
     res.render(__dirname + '/views/pug/index', {
       title: 'Connected to database',
       message: 'Please Login',
-      showLogin: true
+      showLogin: true,
+      showRegistration: true
     });
   });
 
@@ -42,8 +43,47 @@ myDB(async (client) => {
     res.redirect('/profile')
   })
 
-  app.route('/profile').get((req, res) => {
-    res.render(__dirname + '/views/pug/profile')
+  const ensureAuthenticated = (req, res, next) => {
+    if (req.isAuthenticated()) {
+      return next()
+    }
+    res.redirect('/')
+  }
+
+  app.route('/profile').get(ensureAuthenticated, (req, res) => {
+    res.render(__dirname + '/views/pug/profile', {
+      username: req.user.username
+    })
+  })
+
+  app.route('/logout').get((req, res) => {
+    req.logout()
+    res.redirect('/')
+  })
+
+  app.route('/register').post((req, res, next) => {
+    database.findOne({username: req.body.username}, (err, user) => {
+      if (err) {
+        next(err)
+      } else if (user) {
+        res.redirect('/')
+      } else {
+        database.insertOne({
+          username: req.body.username,
+          password: req.body.password
+        }, (err, doc) => {
+          if (err) {
+            res.redirect('/')
+          } else {
+            next(null, doc.ops[0])
+          }
+        })
+      }
+    })
+  })
+
+  app.use((req, res, next) => {
+    res.status(404).type('text').send('404 Not Found')
   })
 
   passport.serializeUser((user, done) => {
